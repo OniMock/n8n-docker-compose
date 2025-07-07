@@ -42,9 +42,10 @@ services:
       GENERIC_TIMEZONE: America/Sao_Paulo
       N8N_LOG_LEVEL: debug
       N8N_HOST: 0.0.0.0
-      VIRTUAL_HOST: n8n.onimock.ddnsfree.com
-      LETSENCRYPT_HOST: n8n.onimock.ddnsfree.com
+      VIRTUAL_HOST: ${N8N_HOST}
+      LETSENCRYPT_HOST: ${N8N_HOST}
       LETSENCRYPT_EMAIL: seu@email.com
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: true
     volumes:
       - n8n_data:/home/node/.n8n
     expose:
