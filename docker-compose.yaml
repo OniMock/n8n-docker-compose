@@ -65,6 +65,8 @@ services:
       - nginx_certs:/etc/nginx/certs:rw
       - nginx_vhost:/etc/nginx/vhost.d
       - nginx_html:/usr/share/nginx/html
+    labels:
+      - com.github.nginx-proxy.nginx
     networks:
       - proxy-tier
 
