@@ -45,54 +45,14 @@ services:
       GENERIC_TIMEZONE: America/Sao_Paulo
       N8N_LOG_LEVEL: debug
       N8N_HOST: 0.0.0.0
-      VIRTUAL_HOST: ${N8N_HOST}
-      LETSENCRYPT_HOST: ${N8N_HOST}
-      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: true
     volumes:
       - n8n_data:/home/node/.n8n
-    expose:
-      - '5678'
-    networks:
-      - proxy-tier
+    ports:
+      - '5678:5678'
     depends_on:
       - postgres
       - redis
-    restart: unless-stopped
-
-  nginx-proxy:
-    image: jwilder/nginx-proxy:alpine
-    platform: linux/amd64
-    container_name: nginx-proxy
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - nginx_certs:/etc/nginx/certs:rw
-      - nginx_vhost:/etc/nginx/vhost.d
-      - nginx_html:/usr/share/nginx/html
-    labels:
-      - com.github.nginx-proxy.nginx
-    networks:
-      - proxy-tier
-
-  letsencrypt:
-    image: nginxproxy/acme-companion
-    container_name: letsencrypt
-    depends_on:
-      - nginx-proxy
-    environment:
-      DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - nginx_certs:/etc/nginx/certs:rw
-      - nginx_vhost:/etc/nginx/vhost.d
-      - nginx_html:/usr/share/nginx/html
-      - acme_data:/etc/acme.sh
-    networks:
-      - proxy-tier
     restart: unless-stopped
 
 volumes:
@@ -101,11 +61,7 @@ volumes:
   waha_sessions:
   waha_media:
   n8n_data:
-  nginx_certs:
-  nginx_vhost:
-  nginx_html:
-  acme_data:
 
 networks:
-  proxy-tier:
+  default:
     driver: bridge
