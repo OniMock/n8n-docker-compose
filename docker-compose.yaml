@@ -42,19 +42,46 @@ services:
       GENERIC_TIMEZONE: America/Sao_Paulo
       N8N_LOG_LEVEL: debug
       N8N_HOST: 0.0.0.0
+      VIRTUAL_HOST: n8n.onimock.ddnsfree.com
+      LETSENCRYPT_HOST: n8n.onimock.ddnsfree.com
+      LETSENCRYPT_EMAIL: seu@email.com
     volumes:
       - n8n_data:/home/node/.n8n
+    expose:
+      - '5678'
+    networks:
+      - proxy-tier
 
-  nginx:
-    image: nginx:latest
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
     platform: linux/amd64
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    container_name: nginx-proxy
+    restart: always
     ports:
       - '80:80'
       - '443:443'
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - nginx_certs:/etc/nginx/certs:rw
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+    networks:
+      - proxy-tier
+
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: letsencrypt
     depends_on:
-      - n8n
+      - nginx-proxy
+    environment:
+      DEFAULT_EMAIL: seu@email.com
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - nginx_certs:/etc/nginx/certs:rw
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+    networks:
+      - proxy-tier
 
 volumes:
   pgdata:
@@ -62,3 +89,10 @@ volumes:
   waha_sessions:
   waha_media:
   n8n_data:
+  nginx_certs:
+  nginx_vhost:
+  nginx_html:
+
+networks:
+  proxy-tier:
+    driver: bridge
