@@ -9,6 +9,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
   postgres:
     image: postgres:latest
@@ -19,6 +20,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
 
   waha:
     image: devlikeapro/waha:latest
@@ -30,6 +32,7 @@ services:
     volumes:
       - waha_sessions:/app/.sessions
       - waha_media:/app/.media
+    restart: unless-stopped
 
   n8n:
     image: n8nio/n8n:latest
@@ -44,7 +47,7 @@ services:
       N8N_HOST: 0.0.0.0
       VIRTUAL_HOST: ${N8N_HOST}
       LETSENCRYPT_HOST: ${N8N_HOST}
-      LETSENCRYPT_EMAIL: seu@email.com
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: true
     volumes:
       - n8n_data:/home/node/.n8n
@@ -52,12 +55,16 @@ services:
       - '5678'
     networks:
       - proxy-tier
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
 
   nginx-proxy:
     image: jwilder/nginx-proxy:alpine
     platform: linux/amd64
     container_name: nginx-proxy
-    restart: always
+    restart: unless-stopped
     ports:
       - '80:80'
       - '443:443'
@@ -77,7 +84,7 @@ services:
     depends_on:
       - nginx-proxy
     environment:
-      DEFAULT_EMAIL: seu@email.com
+      DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - nginx_certs:/etc/nginx/certs:rw
@@ -86,6 +93,7 @@ services:
       - acme_data:/etc/acme.sh
     networks:
       - proxy-tier
+    restart: unless-stopped
 
 volumes:
   pgdata:
